@@ -7,8 +7,7 @@ source .venv/bin/activate
 
 pip install -r requirements .txt
 
-run the .sql in your database and fill out the database url in the .env
-
+create the .env and fill out the fields
 
 run: 
 openssl rand -hex 32
