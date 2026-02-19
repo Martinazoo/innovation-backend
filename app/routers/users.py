@@ -24,7 +24,7 @@ def read_current_user(user_id: UUID = Depends(get_current_user), db: Session = D
         "posY": db_user.posY
     }
 
-@users_router.post("/update")
+@users_router.put("/update")
 def update_user(u_user: UserUpdate, user_id: UUID = Depends(get_current_user), db: Session = Depends(get_db)):
     db_user = db.query(UserDB).filter(UserDB.id == user_id).first()
     if not db_user:
@@ -55,9 +55,9 @@ def update_user(u_user: UserUpdate, user_id: UUID = Depends(get_current_user), d
         }
     }
 
-@users_router.post("/update_position")
+@users_router.put("/update_position")
 def update_user_position(pos: UserUpdatePosition, user_id: UUID = Depends(get_current_user), db: Session = Depends(get_db)):
-    
+
     db_user = db.query(UserDB).filter(UserDB.id == user_id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -76,4 +76,26 @@ def update_user_position(pos: UserUpdatePosition, user_id: UUID = Depends(get_cu
             "posY": db_user.posY
         }
     }
-                                                                        
+
+@users_router.get("/position")
+def get_user_position(user_id: UUID = Depends(get_current_user), db: Session = Depends(get_db)):
+    db_user = db.query(UserDB).filter(UserDB.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "id": str(db_user.id),
+        "posX": db_user.posX,
+        "posY": db_user.posY
+    }
+
+@users_router.delete("/delete")
+def delete_user(user_id: UUID = Depends(get_current_user), db: Session = Depends(get_db)):
+    db_user = db.query(UserDB).filter(UserDB.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    db.delete(db_user)
+    db.commit()
+
+    return {"message": "User deleted successfully"}                                                 
