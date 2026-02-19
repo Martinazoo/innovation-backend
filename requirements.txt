@@ -1,0 +1,8 @@
+fastapi[standard]
+pydantic_settings
+asyncpg
+SQLAlchemy
+PyJWT
+python-jose[cryptography]
+bcrypt
+psycopg2-binary
