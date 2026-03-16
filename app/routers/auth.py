@@ -32,7 +32,6 @@ async def register(user: UserRegistration, db: Session = Depends(get_db)):
 
     return {
         "message": "User registered successfully",
-        "user_id": str(new_user.id)
     }
 
 @auth_router.post("/login")
@@ -46,5 +45,16 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
     
     access_token = create_access_token(data={"sub": str(db_user.id)})
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user":{
+            "id": str(db_user.id),
+            "name": db_user.name,
+            "surname": db_user.surname,
+            "email": db_user.email,
+            "bachelor_degree": db_user.bachelor_degree,
+        }
+            
+    }
 

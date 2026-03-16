@@ -14,3 +14,4 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(routers.auth_router)
 app.include_router(routers.users_router)
+app.include_router(routers.route_router)

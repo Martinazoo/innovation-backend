@@ -85,8 +85,7 @@ def get_user_position(user_id: UUID = Depends(get_current_user), db: Session = D
     
     return {
         "id": str(db_user.id),
-        "posX": db_user.posX,
-        "posY": db_user.posY
+        "position": [db_user.posX, db_user.posY]
     }
 
 @users_router.delete("/delete")
@@ -98,4 +97,21 @@ def delete_user(user_id: UUID = Depends(get_current_user), db: Session = Depends
     db.delete(db_user)
     db.commit()
 
-    return {"message": "User deleted successfully"}                                                 
+    return {"message": "User deleted successfully"}                                             
+
+@users_router.get("/all_positions")
+def get_all_user_positions(db: Session = Depends(get_db)):
+    users = db.query(UserDB).all()
+    return [{"id": str(user.id), "position": [user.posX, user.posY]} for user in users]
+"""
+@users_router.get("/exact")
+def get_exact_user_hardcoded(db: Session = Depends(get_db)):
+    hardcoded_email = "paumartinnadal@gmail.com"
+    db_user = db.query(UserDB).filter(UserDB.email == hardcoded_email).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": str(db_user.id),
+        "position": [db_user.posX, db_user.posY]
+    }
+"""
