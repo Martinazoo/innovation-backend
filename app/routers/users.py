@@ -85,7 +85,8 @@ def get_user_position(user_id: UUID = Depends(get_current_user), db: Session = D
     
     return {
         "id": str(db_user.id),
-        "position": [db_user.posX, db_user.posY]
+        "posX": db_user.posX,
+        "posY": db_user.posY
     }
 
 @users_router.delete("/delete")

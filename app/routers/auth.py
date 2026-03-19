@@ -22,8 +22,8 @@ async def register(user: UserRegistration, db: Session = Depends(get_db)):
         email=user.email,
         password=hashed_password,
         bachelor_degree=user.bachelor_degree,
-        posX=0.0,
-        posY=0.0
+        posX=145,
+        posY=162
     )
 
     db.add(new_user)

@@ -1,39 +1,82 @@
-from fastapi import APIRouter, HTTPException
-
-from services.tiled_map import TiledMap
+from fastapi import APIRouter, HTTPException, Depends
+import json
 from services.astar import AStar
+from database import get_db
+from uuid import UUID
+from sqlalchemy.orm import Session
+from security import get_current_user
+from models.user import UserDB
+
 
 route_router = APIRouter(prefix="/route", tags=["route"])
 
-tiled_map = TiledMap("tiledmap.json")
-astar = AStar(tiled_map.grid)
+with open("grid.json") as f:
+    grid = json.load(f)
 
+with open("points.json") as f:
+    points = json.load(f)
 
-@route_router.get("/get_route")
-def get_route(start: str, end: str):
+astar = AStar(grid)
 
-    if start not in tiled_map.points:
-        raise HTTPException(400, f"Unknown start point: {start}")
+def path_to_points_string(path):
+    return " ".join([f"{x},{y}" for x, y in path])
+"""
+@route_router.get("/path")
+def get_path(start: str, end: str, db: Session = Depends(get_db), user_id: UUID = Depends(get_current_user)):
+    if start not in points or start != "UserLoc":
+        raise HTTPException(status_code=404, detail=f"Point '{start}' does not exist")
 
-    if end not in tiled_map.points:
-        raise HTTPException(400, f"Unknown end point: {end}")
+    if end not in points or end != "UserLoc":
+        raise HTTPException(status_code=404, detail=f"Point '{end}' does not exist")
 
-    start_tile = tiled_map.get_point(start)
-    end_tile = tiled_map.get_point(end)
+    start_pos = tuple(points[start])
+    end_pos = tuple(points[end])
 
-    path_tiles = astar.find_path(start_tile, end_tile)
+    path = astar.find_path(start_pos, end_pos)
 
-    if not path_tiles:
-        raise HTTPException(404, "No path found")
+    if not path:
+        raise HTTPException(status_code=400, detail="No path available between the specified points")
 
-    path_pixels = [
-        tiled_map.tile_to_pixel(tile)
-        for tile in path_tiles
-    ]
+    path_string = path_to_points_string(path)
 
     return {
         "start": start,
         "end": end,
-        "tiles": path_tiles,
-        "pixels": path_pixels
+        "path": path,
+        "pathString": path_string  
+    }
+"""
+
+@route_router.get("/path")
+def get_path(start: str,end: str,user_id: UUID = Depends(get_current_user),db: Session = Depends(get_db)):
+    def resolve_position(point_name: str):
+        if point_name == "UserLoc":
+            db_user = db.query(UserDB).filter(UserDB.id == user_id).first()
+            if not db_user:
+                raise HTTPException(status_code=404, detail="User not found")
+            return (db_user.posX, db_user.posY)
+        
+        if point_name not in points:
+            raise HTTPException(status_code=404, detail=f"Point '{point_name}' does not exist")
+        
+        return tuple(points[point_name])
+
+    start_pos = resolve_position(start)
+    end_pos = resolve_position(end)
+
+    path = astar.find_path(start_pos, end_pos)
+
+    if not path:
+        raise HTTPException(
+            status_code=400,
+            detail="No path available between the specified points"
+        )
+
+    path_string = path_to_points_string(path)
+
+    return {
+        "start": start,
+        "end": end,
+        "path": path,
+        "pathString": path_string
     }
