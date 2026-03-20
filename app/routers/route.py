@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from security import get_current_user
 from models.user import UserDB
+from schemas.route import RouteRequest
 
 
 route_router = APIRouter(prefix="/route", tags=["route"])
@@ -47,14 +48,18 @@ def get_path(start: str, end: str, db: Session = Depends(get_db), user_id: UUID 
     }
 """
 
-@route_router.get("/path")
-def get_path(start: str,end: str,user_id: UUID = Depends(get_current_user),db: Session = Depends(get_db)):
+
+@route_router.post("/path")
+def get_path(route_request: RouteRequest, user_id: UUID = Depends(get_current_user), db: Session = Depends(get_db)):
+    start = route_request.start
+    end = route_request.end
+
     def resolve_position(point_name: str):
         if point_name == "UserLoc":
             db_user = db.query(UserDB).filter(UserDB.id == user_id).first()
             if not db_user:
                 raise HTTPException(status_code=404, detail="User not found")
-            return (db_user.posX, db_user.posY)
+            return (int(db_user.posY), int(db_user.posX))
         
         if point_name not in points:
             raise HTTPException(status_code=404, detail=f"Point '{point_name}' does not exist")
